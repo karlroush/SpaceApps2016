@@ -6,6 +6,7 @@ import sys
 import Leap, sys, thread, time
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 import msvcrt
+import statistics
 
 #Set up option parsing to get connection string
 '''import argparse  
@@ -21,8 +22,8 @@ sitl = None
 if not target:
     import dronekit_sitl
     sitl = dronekit_sitl.start_default()
-    target = sitl.connection_string()'''
-
+    target = sitl.connection_string()
+'''
 target = 'udpin:0.0.0.0:14550'
 print 'Connecting to ' + target + '...'
 vehicle = connect(target, wait_ready=True)
@@ -55,38 +56,47 @@ class LeapMotionListener(Leap.Listener):
             #print handType + " Hand ID:  " + str(hand.id) + " Palm Position: " + str(hand.palm_position)
             normal = hand.palm_normal
             direction = hand.direction
-            '''print LocationGlobalRelativeLeap.x
+            print LocationGlobalRelativeLeap.x
             print LocationGlobalRelativeLeap.y  
             print LocationGlobalRelativeLeap.z
-            print "" '''
+            print "" 
 
             global x
             global y
             global z
 
             x=float(LocationGlobalRelativeLeap.x)
-            if x>1: #this is so tiny movements dont affect it
+            xData.append(x)
+            z=float(LocationGlobalRelativeLeap.y)
+            zData.append(z)
+            y=float(LocationGlobalRelativeLeap.z)
+            yData.append(y)
+
+            x=statistics.median(xData)
+            y=statistics.median(yData)
+            z=statistics.median(zData)
+
+            if abs(x)>abs(y) and abs(x)>abs(z):
                 x=x
-            else:   #if change is less than 1, make it have no change
-                x=0
-
-            y=float(LocationGlobalRelativeLeap.y)
-            if y>1: #this is so tiny movements dont affect it
+                y=0
+                z=0
+            elif abs(y)>abs(x) and abs(y)>abs(z):
                 y=y
-            else:   #if change is less than 1, make it have no change
-                y=0   
-
-            z=float(LocationGlobalRelativeLeap.z)
-            if z>1: #this is so tiny movements dont affect it
+                x=0
+                z=0
+            elif abs(z)>abs(x) and abs(z)>abs(y):
                 z=z
-            else:   #if change is less than 1, make it have no change
+                x=0
+                y=0
+            else:
+                x=0
+                y=0
                 z=0
 
             return x
             return y
             return z
-
-            #print x, y, z
+            print x, y, z
 
     def on_exit(self, controller):
         print "Loop ended" 
@@ -100,10 +110,10 @@ def leapData():
     frame=controller.frame()
     previous = controller.frame(1) #The previous frame
     hands=frame.id
-    time.sleep(0.5)
+    time.sleep(0.25)
     controller.remove_listener(listener)   
 
-def send_ned_velocity(velocity_x,velocity_y,velocity_z,duration):
+def send_ned_velocity(velocity_x,velocity_y,velocity_z):
     msg = vehicle.message_factory.set_position_target_local_ned_encode(
         0,
         0,0,
@@ -113,9 +123,11 @@ def send_ned_velocity(velocity_x,velocity_y,velocity_z,duration):
         velocity_x,velocity_y,velocity_z,
         0,0,0,
         0,0)
-    '''for x in range(0,duration):
+    dur=0
+    while dur<0.25:
         vehicle.send_mavlink(msg)
-        time.sleep(1)'''
+        time.sleep(0.05)
+        dur=dur+0.05
 
 def arm_and_takeoff(aTargetAltitude):
     """
@@ -171,24 +183,30 @@ def updateDirections():
     global yDirection
     global zDirection
 
-    if math.copysign(0.3,x)>0:
-        xDirection=0.1
+    if x==0:
+        xDirection=0
+    elif math.copysign(0.3,x)>0:
+        xDirection=0.5
     elif math.copysign(0.3,x)<0:
-        xDirection=-0.1
+        xDirection=-0.5
     else:
         xDirection=0
 
-    if math.copysign(0.3,y)<0:
-        yDirection=0.1
+    if y==0:
+        yDirection=0
+    elif math.copysign(0.3,y)<0:
+        yDirection=0.5
     elif math.copysign(0.3,y)>0:
-        yDirection=-0.1
+        yDirection=-0.5
     else:
         yDirection=0
-
-    if math.copysign(0.3,z)<0:
-        zDirection=0.1
+    
+    if z==0:
+        zDirection=0
+    elif math.copysign(0.3,z)<0:
+        zDirection=0.5
     elif math.copysign(0.3,z)>0:
-        zDirection=-0.1
+        zDirection=-0.5
     else:
         zDirection=0
     
@@ -221,12 +239,26 @@ x=0.1
 y=0.1
 z=0.1
 
-arm_and_takeoff(3)
+global xData
+global yData
+global zData
+xData=[]
+yData=[]
+zData=[]
+
+arm_and_takeoff(7)
+time.sleep(2)
+print "Hand control enabled"
+
 while(True):
     leapData()
+    xData=[]
+    yData=[]
+    zData=[]
     updateDirections()
     directionTS()
-    send_ned_velocity(xDirection,yDirection,zDirection,0.5)
+    send_ned_velocity(xDirection,yDirection,zDirection)
+    time.sleep(1)
     if msvcrt.kbhit():
         # The user entered a key. Check to see if it was a "q".
         if (msvcrt.getch() == "q"):
@@ -236,8 +268,8 @@ while(True):
             #Close vehicle object before exiting script
             print "Close vehicle object"
             vehicle.close()
-            '''if sitl is not None:
-                sitl.stop()'''
+            if sitl is not None:
+                sitl.stop()
             break
         else:
             pass
