@@ -75,23 +75,24 @@ def arm_and_takeoff(aTargetAltitude):
     while True:
         print " Altitude: ", vehicle.location.global_relative_frame.alt 
         #Break and return from function just below target altitude.        
-        if vehicle.location.global_relative_frame.alt>=aTargetAltitude*0.95: 
+        if vehicle.location.global_relative_frame.alt>=aTargetAltitude: 
             print "Reached target altitude"
             break
-        # time.sleep(0)
+        time.sleep(1)
 
 arm_and_takeoff(2) #1 meter from ground to table, 1.1 if account for legs and 1.2 for reaching over cup
-
-NORTH=0.1732050808
-WEST=-0.1
+#if vehicle.location.global_relative_frame.alt < 2:
+#    arm_and_takeoff(2) 
+NORTH=0.2732050808
+WEST=-0.2
 print "fly northwest"
-send_ned_velocity(NORTH,WEST,0,3) # this goes 0.2 m straight if facing the coffee cabinets head on
+send_ned_velocity(NORTH,WEST,0,5) # this goes 0.2 m straight if facing the coffee cabinets head on
 time.sleep(1)
 
-SOUTH=-0.1732050808
-EAST=0.1
+SOUTH=-0.2732050808
+EAST=0.2
 print "fly southeast" #returns back to right above the pioneer
-send_ned_velocity(SOUTH,EAST,0,3)
+send_ned_velocity(SOUTH,EAST,0,5)
 time.sleep(1)
 
 
@@ -112,9 +113,11 @@ time.sleep(1)
 ### sleep so we can see the change in map
 ##time.sleep(30)
 
-send_ned_velocity(0,0,-0.6,3)
-print "Returning to Launch" #returns to the pioneer pad, should descend
-#vehicle.mode = VehicleMode("RTL")
+#send_ned_velocity(0,0,0.2,5)
+print "Activating  \"Landing\" Mode... "
+print "Landing..." #returns to the pioneer pad, should descend
+#assumes pioneer did not move and that drone returned to be directly above the landing platform
+vehicle.mode = VehicleMode("LAND")
 
 #Close vehicle object before exiting script
 print "Close vehicle object"

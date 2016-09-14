@@ -6,11 +6,28 @@ import sys
 import Leap, sys, thread, time
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 import msvcrt
+import statistics
 
-target = 'udpin:0.0.0.0:14550'
+#Set up option parsing to get connection string
+import argparse  
+parser = argparse.ArgumentParser(description='Commands vehicle using vehicle.simple_goto.')
+parser.add_argument('--connect', 
+                   help="Vehicle connection target string. If not specified, SITL automatically started and used.")
+args = parser.parse_args()
+
+target = args.connect
+sitl = None
+
+#Start SITL if no connection string specified
+if not target:
+    import dronekit_sitl
+    sitl = dronekit_sitl.start_default()
+    target = sitl.connection_string()
+
+#target = 'udpin:0.0.0.0:14550'
 print 'Connecting to ' + target + '...'
 vehicle = connect(target, wait_ready=True)
-vehicle.home_location=vehicle.location.global_frame
+#vehicle.home_location=vehicle.location.global_frame
 
 class LeapMotionListener(Leap.Listener):
     finger_names = ['Thumb','Index','Middle', 'Ring','Pinky']
@@ -39,22 +56,47 @@ class LeapMotionListener(Leap.Listener):
             #print handType + " Hand ID:  " + str(hand.id) + " Palm Position: " + str(hand.palm_position)
             normal = hand.palm_normal
             direction = hand.direction
-            '''print LocationGlobalRelativeLeap.x
+            print LocationGlobalRelativeLeap.x
             print LocationGlobalRelativeLeap.y  
             print LocationGlobalRelativeLeap.z
-            print "" '''
+            print "" 
 
             global x
             global y
             global z
 
-            x= float(LocationGlobalRelativeLeap.x)
-            y=float(LocationGlobalRelativeLeap.y)
-            z=float(LocationGlobalRelativeLeap.z)
+            x=float(LocationGlobalRelativeLeap.x)
+            xData.append(x)
+            z=float(LocationGlobalRelativeLeap.y)
+            zData.append(z)
+            y=float(LocationGlobalRelativeLeap.z)
+            yData.append(y)
+
+            x=statistics.median(xData)
+            y=statistics.median(yData)
+            z=statistics.median(zData)
+
+            if abs(x)>abs(y) and abs(x)>abs(z):
+                x=x
+                y=0
+                z=0
+            elif abs(y)>abs(x) and abs(y)>abs(z):
+                y=y
+                x=0
+                z=0
+            elif abs(z)>abs(x) and abs(z)>abs(y):
+                z=z
+                x=0
+                y=0
+            else:
+                x=0
+                y=0
+                z=0
 
             return x
             return y
             return z
+            print x, y, z
 
     def on_exit(self, controller):
         print "Loop ended" 
@@ -71,7 +113,7 @@ def leapData():
     time.sleep(0.25)
     controller.remove_listener(listener)   
 
-def send_ned_velocity(velocity_x,velocity_y,velocity_z,duration):
+def send_ned_velocity(velocity_x,velocity_y,velocity_z):
     msg = vehicle.message_factory.set_position_target_local_ned_encode(
         0,
         0,0,
@@ -81,9 +123,11 @@ def send_ned_velocity(velocity_x,velocity_y,velocity_z,duration):
         velocity_x,velocity_y,velocity_z,
         0,0,0,
         0,0)
-    for x in range(0,duration):
+    dur=0
+    while dur<0.25:
         vehicle.send_mavlink(msg)
-        time.sleep(1)
+        time.sleep(0.05)
+        dur=dur+0.05
 
 def arm_and_takeoff(aTargetAltitude):
     """
@@ -122,9 +166,8 @@ def arm_and_takeoff(aTargetAltitude):
 
 def flightCheck():
     print "Start Flight Check"
-    vehicle = connect(connection_string, wait_ready=True)
     # Connect to the Vehicle.
-    print "Connecting to vehicle on: %s" % (connection_string)
+    print "Connecting to vehicle on: %s" % (target)
     # Get some vehicle attributes (state)
     print "Get some vehicle attribute values:"
     print " GPS: %s" % vehicle.gps_0
@@ -140,24 +183,30 @@ def updateDirections():
     global yDirection
     global zDirection
 
-    if math.copysign(0.3,x)>0:
-        xDirection=0.3
+    if x==0:
+        xDirection=0
+    elif math.copysign(0.3,x)>0:
+        xDirection=0.5
     elif math.copysign(0.3,x)<0:
-        xDirection=-0.3
+        xDirection=-0.5
     else:
         xDirection=0
 
-    if math.copysign(0.3,y)<0:
-        yDirection=0.3
+    if y==0:
+        yDirection=0
+    elif math.copysign(0.3,y)<0:
+        yDirection=0.5
     elif math.copysign(0.3,y)>0:
-        yDirection=-0.3
+        yDirection=-0.5
     else:
         yDirection=0
-
-    if math.copysign(0.3,z)<0:
-        zDirection=0.3
+    
+    if z==0:
+        zDirection=0
+    elif math.copysign(0.3,z)<0:
+        zDirection=0.5
     elif math.copysign(0.3,z)>0:
-        zDirection=-0.3
+        zDirection=-0.5
     else:
         zDirection=0
     
@@ -166,23 +215,52 @@ def updateDirections():
     return zDirection
 
 def directionTS():
-        print xDirection
-        print yDirection 
-        print zDirection
+        print "X velocity:", xDirection
+        print "Y velocity:", yDirection 
+        print "Z velocity:", zDirection
 
+def upAndDown():
+    arm_and_takeoff(5)
+    print "Activating  \"Landing\" Mode... "
+    print "Landing..." 
+    vehicle.mode = VehicleMode("RTL")
+    #Close vehicle object before exiting script
+    print "Close vehicle object"
+    vehicle.close()
 
 
 print "Starting program"
-time.sleep(5)
+time.sleep(2)
+
+global x
+global y
+global z
+x=0.1
+y=0.1
+z=0.1
+
+global xData
+global yData
+global zData
+xData=[]
+yData=[]
+zData=[]
+
+arm_and_takeoff(7)
+time.sleep(2)
+print "Hand control enabled"
 
 while(True):
-    #arm_and_takeoff(5)
     leapData()
+    xData=[]
+    yData=[]
+    zData=[]
     updateDirections()
     directionTS()
-    send_ned_velocity(xDirection,yDirection,zDirection,2)
+    send_ned_velocity(xDirection,yDirection,zDirection)
+    time.sleep(1)
     if msvcrt.kbhit():
-        # The user entered a key. Check to see if it was a "c".
+        # The user entered a key. Check to see if it was a "q".
         if (msvcrt.getch() == "q"):
             print "Activating  \"Landing\" Mode... "
             print "Landing..." 
@@ -190,44 +268,8 @@ while(True):
             #Close vehicle object before exiting script
             print "Close vehicle object"
             vehicle.close()
+            if sitl is not None:
+                sitl.stop()
             break
         else:
             pass
-
-'''
-arm_and_takeoff(5) #fly to a height of 5m
-
-North=math.copysign(0.3,LocationGlobalRelativeLeap.x)
-East=math.copysign(0.3,LocationGlobalRelativeLeap.y)
-Upwards=math.copysign(-0.3,LocationGlobalRelativeLeap.z)
-Upwards=Upwards*-1
-
-NORTH=0.3
-WEST=-0.3
-print "fly northwest"
-send_ned_velocity(NORTH,WEST,0,5) # this goes 0.2 m straight if facing the coffee cabinets head on
-time.sleep(1)
-
-SOUTH=-0.3
-EAST=0.3
-print "fly southeast" #returns back to right above the pioneer
-send_ned_velocity(SOUTH,EAST,0,5)
-time.sleep(1)
-
-upwards=-0.3
-print "Fly up"
-send_ned_velocity(0,0,upwards,5)
-time.sleep
-
-print "Activating  \"Landing\" Mode... "
-print "Landing..." #returns to the pioneer pad, should descend
-#assumes pioneer did not move and that drone returned to be directly above the landing platform
-vehicle.mode = VehicleMode("RTL")
-
-#Close vehicle object before exiting script
-print "Close vehicle object"
-vehicle.close()
-
-#40.468204, -74.444008
-#40.468200, -74.443604
-'''
