@@ -27,4 +27,22 @@ TO EXIT THE PROGRAM:
 3) The vehicle will return to its initial location, then land and turn off.
 
 CONFIGURATION NOTES:
+Connection string- Can be changed on line 27 by modifying the "target" variable. Default is udpin:0.0.0.0:14550 which is for the 3DR Solo Drone connection over wifi
+Duration of Leap Motion data collection- Change the value of time.sleep(0.25) on line 113. Default is 0.25 seconds. IMPORTANT! The variable dur (line 126)  must be changed to match this. This is to prevent a mismatch between the Leap Motion data and the flight data commands sent to the drone. It is possible to not have them match, though that would require additional configuration by the user and should not be attempted unless they are certain it will not interfere with other components.
+Initial takeoff height- Change the parameter of arm_and_takeoff(7) on line 249. The default height is 7 meters.
+Program end keys- Change the value of "q" to which ever key you desire on line 264 (if (msvcrt.getch() == "q").
+
+ADDITIONAL FEATURES:
+Running the program on a simulator- 
+      Runs the program on a SITL Simulator. 
+      Un-comment lines 12-26, Comment out lines 27 and 30, alternatively run "3DR_handControlSIMULATOR.py" under droningOn>DroneScripts.
+Performing a Flight Check-
+      Brings up information about the vehicle such as connection string, GPS location, battery percent, status, if it is armable, and more.
+      Type “flightCheck()” onto line 248.
+Simple Takeoff and Land-
+      Vehicle takes off and flies to a specified altitude (default= 5 meters), then comes back and lands.
+      Type “upAndDown()” onto line 248.
+      Altitude can be changed via the parameter in arm_and_takeoff() on line 223
+      
+Special thanks to Professors Ivan Seskar & Wade Trappe, as well as Rutgers University and Rutgers Wireless Information Network Lab
 
