@@ -1,0 +1,149 @@
+<html>
+  <head>
+    <link rel="shortcut icon" type="image/x-icon" href="http://spaceappsnextgen.com/favicon.ico"/>
+    <title>EVA Activities</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="space.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <style>
+      body {
+        background: black;
+        color: white;
+      }
+      .td{
+        padding:0 8em 0 0;
+        vertical-align: top;
+      }
+      #last{
+        width:100%;
+        padding:0 3em 3em 0;
+      }
+      #crew{
+        width:15px;
+        padding:0 5em 3em 0;
+      }
+      #veh{
+        width:15px;
+        padding:0 5em 3em 0;
+      }
+      #eva{
+        width:15px;
+        padding:0 6em 3em 0;
+      }
+      #date{
+        width:15px;
+        padding:0 3em 3em 0;
+        vertical-align: top;
+      }
+      #evaHead{
+        width:15px;
+        padding:0 2em 2em 0;
+        vertical-align: top;
+      }
+      #couHead{
+        width:15px;
+        padding:0 4em 2em 0;
+        vertical-align: top;
+      }
+      #crew{
+        width:15px;
+        padding:0 2em 2em 0;
+        vertical-align: top;
+      }
+      input[type=text] {
+        background-color: gray;
+        color: white;
+      }
+      .button {
+        border: none;
+        background-color: green;
+        font-size: 16px;
+      }
+      .button2 {
+        border: none;
+        padding: 0.3em;
+        background-color: #0066ff;
+        font-size: 16px;
+      }
+      .button4 {
+        border: none;
+        padding: 0.3em;
+        background-color: red;
+        font-size: 16px;
+      }
+      .button3 {
+        padding: 0.3em;
+        background-color: #ff3300;
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1><center>Extra-Vehicular Activity Search (US and Russia) </center></h1>
+      <h3>This page allows the user to input certain parameters and will display the EVA match(es) in a table below.</h3>
+
+      <p>Developed for <a href="http://spaceappsnextgen.com/">2016 NYC Space Apps Next Gen Hackathon</a> on Sept. 17-18</p>
+
+      <p>Data sourced from <a href="https://data.nasa.gov/Raw-Data/Extra-vehicular-Activity-EVA-US-and-Russia/9kcy-zwvn">NASA's archives </a> </p>
+      <br>
+
+      <table>
+        <tr hieght="5em">
+            <td class="td">
+            <form>
+              <h4><b>Search by Year</b></h4>
+              Year <br><input type="text" name="year" value="" id='dField'>  <br><br>                 
+            </form>            
+          </td>    
+            <td class="td">
+            <form>
+              <h4><b>Search by Country</b></h4>
+              USA or Russia <br><input type="text" name="year" value="" id='cField'>  <br><br>              
+              <br>
+            </form>
+          </td>
+          <td class="td">
+            <form>
+              <h4><b>Time Period</b></h4>
+              <button type="button" onclick="time1()" class="button2"><b>1965-1980</b></button> <br><br>
+              <button type="button" onclick="time2()" class="button2"><b>1981-2000</b></button> <br><br>
+              <button type="button" onclick="time3()" class="button2"><b>2001-2013</b></button> <br><br>
+            </form>
+          </td>
+          <td class="td">
+            <form>
+              <h4><b>Vehicle</b></h4>
+              <button type="button" onclick="veh1()" class="button3"><b>Apollo</b></button> <br>
+              <button type="button" onclick="veh2()" class="button3"><b>Gemini</b></button> <br>
+              <button type="button" onclick="veh3()" class="button3"><b>ISS</b></button> <br>
+              <button type="button" onclick="veh4()" class="button3"><b>Skylab</b></button> <br>
+              <button type="button" onclick="veh5()" class="button3"><b>Soyuz</b></button> <br>
+              <button type="button" onclick="veh6()" class="button3"><b>STS</b></button> <br>                
+            </form>            
+          </td>
+        </tr>
+      </table>
+    <button type="button" onclick="Yearresults()" class="button"><b>Year results </b></button> &nbsp;&nbsp;&nbsp;
+    <button type="button" onclick="ANDresults()" class="button"><b>AND results </b></button> &nbsp;&nbsp;&nbsp;
+    <button type="button" onclick="Countryresults()" class="button"><b>Country results </b></button> &nbsp;&nbsp;&nbsp;
+    <button type="button" onclick="displayAll()" class="button"><b>Display all</b></button>&nbsp;&nbsp;&nbsp;
+    <a href="file:///C:/Users/Karl/Desktop/School%20work/SpaceApps%202016/index.html"><button type="button" onclick="clear()" class="button4"><b>CLEAR</b></button></a>&nbsp;&nbsp;&nbsp;
+    <br>
+    <br>
+    <h3> <b> Results </b></h3>
+    <table>
+      <tr>
+        <td id='evaHead'><b>EVA Number</b></td>
+        <td id='evaHead'><b>Date (Year-Month-Day)</b></td>
+        <td id='evaHead'><b>Duration</b></td>
+        <td id='couHead'><b>Country</b></td>
+        <td id='crew'><b>Crew</b></td>
+        <td id='couHead'><b>Vehicle</b></td>
+        <td id='couHead'><b>Purpose</b></td>
+      </tr>
+    </table>
+        <RES id='RES' width=100%></RES>
+    </div>
+  </body>
+</html>
