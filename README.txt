@@ -4,6 +4,7 @@ EvaS (ExtraVehicular Activity Search) allows the user to search NASA's database 
 Developed over 14 hours for 2016 NYC Space Apps Next Gen Hackathon on Sept. 17-18 by Karl Roush
 Data sourced from NASA's archives
 contact me at karlroush@gmail.com
+*old commits/contributors are the results of having to fork an older repo and delete all the files, due to technical difficulties at the time
 
 Languages Used:
 HTML/CSS
@@ -15,3 +16,4 @@ Scriptr.io (program hosting)
 GitHub (file repository)
 
 view the project at https://goo.gl/PVW8pG
+view the code at https://github.com/karoush/SpaceApps2016
